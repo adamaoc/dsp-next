@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "export": "yarn build && next export && mv out _static"
+    "export": "yarn build && next export"
   },
   "dependencies": {
     "@babel/core": "^7.18.6",
