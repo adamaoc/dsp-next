@@ -3,6 +3,7 @@ import Head from 'next/head'
 import { GlobalStyles } from '../components/styles/GlobalStyles';
 import styled from '@emotion/styled';
 import { Schedule } from '../components/calendar/Calendar';
+import { useState } from 'react';
 
 const Button = styled.button`
   background: cornflowerblue;
@@ -54,6 +55,7 @@ const Footer = styled.footer`
 `;
 
 const Home: NextPage = () => {
+  const [dateSelected, setDateSelected] = useState<any>(null);
   return (
     <div>
       <GlobalStyles />
@@ -68,11 +70,14 @@ const Home: NextPage = () => {
           DSP
         </MainTitle>
         <CalBox>
-          <Schedule />
+          <Schedule handleDateSelect={setDateSelected} />
         </CalBox>
-        <div>
-          <Button>Schedule Appointment</Button>
-        </div>
+        {dateSelected && (
+          <div>
+            <p>{dateSelected.getDate()}</p>
+            <Button>Schedule Appointment</Button>
+          </div>
+        )}
         <Footer>
           <p>developed with love</p>
         </Footer>
