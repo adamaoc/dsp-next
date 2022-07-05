@@ -5,9 +5,14 @@ import 'react-calendar/dist/Calendar.css';
 export function Schedule() {
 	const [value, onChange] = useState(new Date());
 
+  const handleClick = (one: any) => {
+    console.log(one);
+    onChange(one)
+  }
+
 	return (
     <Calendar
-      onChange={onChange}
+      onChange={handleClick}
       value={value}
     />
 	);
