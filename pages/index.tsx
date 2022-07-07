@@ -113,12 +113,12 @@ function timeConvert(time: string) {
 function bookedTransformed(dates: String[]) {
   const months:any = [];
   for (let i = 0; i < dates.length; i++) {
-    const tempDate = new Date(dates[i]);
-    if (months.includes(tempDate.getMonth())) {
-      // do stuff...
-    } else {
-      months.push(tempDate.getMonth());
-    }
+    // const tempDate = new Date(dates[i]);
+    // if (months.includes(tempDate.getMonth())) {
+    //   // do stuff...
+    // } else {
+    //   months.push(tempDate.getMonth());
+    // }
   }
 }
 
