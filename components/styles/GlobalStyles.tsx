@@ -32,6 +32,11 @@ const reset = css`
   img {    
     max-width: 100%;
   }
+
+  body .react-calendar {
+    border: none;
+    border-right: 1px solid #eee;
+  }
 `;
 
 export const GlobalStyles = () => {

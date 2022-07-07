@@ -1,31 +1,21 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import { GlobalStyles } from '../components/styles/GlobalStyles';
+import { keyframes } from '@emotion/react';
 import styled from '@emotion/styled';
 import { Schedule } from '../components/calendar/Calendar';
-import { useState } from 'react';
-
-const Button = styled.button`
-  background: cornflowerblue;
-  border: 1px solid transparent;
-  color: #fff;
-  border-radius: 5px;
-  padding: 1rem 2rem;
-  cursor: pointer;
-  &:hover {
-    background: #1f1f1f;
-    color: white;
-  }
-`;
+import { useMemo, useState } from 'react';
+import Image from 'next/image';
+import { Button } from '../components/styles/Button';
+import { Modal } from '../components/styles/Modal';
 
 const Main = styled.main`
   min-height: 100vh;
   flex: 1;
   display: flex;
   flex-direction: column;
-  /* justify-content: center; */
   align-items: center;
-  background-image: url('https://ampnet.sfo2.cdn.digitaloceanspaces.com/Denilson/cityscape/IMG_7523.jpg');
+  background-image: url('/dt_web.jpg');
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center center;
@@ -34,14 +24,19 @@ const Main = styled.main`
 const MainTitle = styled.h1`
   line-height: 1.15;
   font-size: 4rem;
+  padding-top: 2rem;
 `;
 
-const CalBox = styled.div`
-  width: 300px;
-  height: 400px;
+interface CallBox {
+  open: boolean;
+}
+const CalBox = styled.div<CallBox>`
+  width: ${({open}) => open ? '600px' : '300px'};
   background: white;
   border-radius: 5px;
   margin: 2rem 0;
+  display: flex;
+  transition: width ease-in-out 200ms;
 `;
 
 const Footer = styled.footer`
@@ -54,8 +49,107 @@ const Footer = styled.footer`
   width: 100%;
 `;
 
-const Home: NextPage = () => {
-  const [dateSelected, setDateSelected] = useState<any>(null);
+const fadeIn = keyframes`
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+`
+const AppointmentSelector = styled.div`
+  width: 100%;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  h4 {
+    text-align: center;
+    font-weight: 400;
+    margin-bottom: 1em;
+  }
+  li {
+    list-style: none;
+  }
+  .clear {
+    align-self: flex-end;
+  }
+  ul {
+    animation: ${fadeIn} 1s ease-in;
+  }
+`;
+
+const booked = [
+  'July 13, 22 18:00:00 GMT-0500',
+  'July 13, 22 15:00:00 GMT-0500',
+  'July 13, 22 10:00:00 GMT-0500',
+  'July 10, 22 18:00:00 GMT-0500',
+  'July 20, 22 18:00:00 GMT-0500',
+  'July 8, 22 15:00:00 GMT-0500'
+]
+
+const timesAvailable = [
+  '10',
+  '15',
+  '18'
+]
+
+function timeConvert(time: string) {
+  switch (time) {
+    case '10':
+      return '10:00 am';
+    case '15':
+      return '3:00 pm';
+    case '18':
+      return '6:00 pm';
+    default:
+      return;
+  }
+}
+
+function bookedTransformed(dates: String[]) {
+  const months:any = [];
+  for (let i = 0; i < dates.length; i++) {
+    const tempDate = new Date(dates[i]);
+    if (months.includes(tempDate.getMonth())) {
+      // do stuff...
+    } else {
+      months.push(tempDate.getMonth());
+    }
+  }
+}
+
+export const getServerSideProps = async () => {
+  const apiUrl = 'http://localhost:3000/api/bookings';
+  const res = await fetch(apiUrl);
+  const data = await res.json();
+
+  return {
+    props: {
+      bookings: data
+    }
+  }
+}
+
+const Home: NextPage = ({ bookings }: any) => {
+  const [dateSelected, setDateSelected] = useState<Date | null>(null);
+  const [modalOpen, setModalOpen] = useState<boolean>(false);
+
+  const timesBooked: any[] = useMemo(() => {
+    let someBooked = [];
+    for (let i = 0; i < booked.length; i++) {
+      const tempDate = new Date(booked[i]);
+      if (tempDate.toDateString() === dateSelected?.toDateString()) {
+        someBooked.push(tempDate.getHours());
+      }
+    }
+    return someBooked
+  }, [dateSelected]);
+console.log(timesBooked)
+console.log(bookings)
   return (
     <div>
       <GlobalStyles />
@@ -67,21 +161,49 @@ const Home: NextPage = () => {
 
       <Main>
         <MainTitle>
-          DSP
+          <Image 
+            src="/ds-photography-logo-black.png" 
+            alt="DS Photography Logo" 
+            width={80}
+            height={80}
+          />
         </MainTitle>
-        <CalBox>
-          <Schedule handleDateSelect={setDateSelected} />
+        <CalBox open={!!dateSelected}>
+          <Schedule 
+            handleDateSelect={setDateSelected} 
+            excludeDates={booked}
+          />
+
+          {dateSelected && (
+            <AppointmentSelector>
+              <h4>{dateSelected.toDateString()}</h4>
+              <ul>
+                {timesAvailable.map((time) => {
+                  return (
+                    <li key={time}>
+                      <Button 
+                        fullWidth 
+                        disabled={timesBooked.includes(Number(time))}
+                        onClick={() => setModalOpen(true)}
+                      >
+                        Schedule for {timeConvert(time)}
+                      </Button>
+                    </li>
+                  )
+                })}
+              </ul>
+              <button className="clear" onClick={() => setDateSelected(null)}>clear</button>
+            </AppointmentSelector>
+          )}
         </CalBox>
-        {dateSelected && (
-          <div>
-            <p>{dateSelected.getDate()}</p>
-            <Button>Schedule Appointment</Button>
-          </div>
-        )}
         <Footer>
           <p>developed with love</p>
         </Footer>
       </Main>
+
+      <Modal open={modalOpen} close={() => setModalOpen(false)}>
+        <p>Here</p>
+      </Modal>
     </div>
   )
 }
