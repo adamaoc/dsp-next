@@ -1,5 +1,6 @@
 import styled from '@emotion/styled'
 import React from 'react'
+import OutsideClickHandler from '../OutsideClickHandler';
 
 interface ModalProps {
   open: boolean;
@@ -22,15 +23,41 @@ const ModalBody = styled.div`
   width: 340px;
   max-height: 80vh;
   background: #fff;
-  padding: 1rem;
 `;
 
-export const Modal = ({ children, open, close }: any) => {
+const ModalTitle = styled.h3`
+  background: #494f59;
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  button {
+    margin-left: auto;
+    background: none;
+    border: none;
+    font-size: 0.75rem;
+    cursor: pointer;
+    color: #fff;
+  }
+`;
+
+export const Modal = ({ title, children, open, close }: any) => {
+  
+  const handleDismiss = () => {
+    document.body.removeAttribute('style');
+    close();
+  };
+
   return (
-    <Overlay open={open} onClick={close}>
-      <ModalBody>
-        {children}
-      </ModalBody>
+    <Overlay open={open}>
+      <OutsideClickHandler onOutsideClick={handleDismiss}>
+        <ModalTitle>{title} <button onClick={handleDismiss}>X</button></ModalTitle>
+        <ModalBody>
+          {children}
+        </ModalBody>
+      </OutsideClickHandler>
     </Overlay>
   )
 }

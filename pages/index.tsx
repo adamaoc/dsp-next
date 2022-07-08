@@ -8,6 +8,8 @@ import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import { Button } from '../components/styles/Button';
 import { Modal } from '../components/styles/Modal';
+import { ScheduleForm } from '../components/ScheduleForm/ScheduleForm';
+import { timeConvert } from '../components/Helpers/functions';
 
 const Main = styled.main`
   min-height: 100vh;
@@ -97,19 +99,6 @@ const timesAvailable = [
   '18'
 ]
 
-function timeConvert(time: string) {
-  switch (time) {
-    case '10':
-      return '10:00 am';
-    case '15':
-      return '3:00 pm';
-    case '18':
-      return '6:00 pm';
-    default:
-      return;
-  }
-}
-
 function bookedTransformed(dates: String[]) {
   const months:any = [];
   for (let i = 0; i < dates.length; i++) {
@@ -136,6 +125,7 @@ export const getServerSideProps = async () => {
 
 const Home: NextPage = ({ bookings }: any) => {
   const [dateSelected, setDateSelected] = useState<Date | null>(null);
+  const [timeSelected, setTimeSelected] = useState<Number | null>(null);
   const [modalOpen, setModalOpen] = useState<boolean>(false);
 
   const timesBooked: any[] = useMemo(() => {
@@ -148,8 +138,12 @@ const Home: NextPage = ({ bookings }: any) => {
     }
     return someBooked
   }, [dateSelected]);
-console.log(timesBooked)
-console.log(bookings)
+
+  function handleTimeSelect(time: number) {
+    setTimeSelected(time);
+    setModalOpen(true);
+  }
+ 
   return (
     <div>
       <GlobalStyles />
@@ -184,7 +178,7 @@ console.log(bookings)
                       <Button 
                         fullWidth 
                         disabled={timesBooked.includes(Number(time))}
-                        onClick={() => setModalOpen(true)}
+                        onClick={() => handleTimeSelect(Number(time))}
                       >
                         Schedule for {timeConvert(time)}
                       </Button>
@@ -201,8 +195,12 @@ console.log(bookings)
         </Footer>
       </Main>
 
-      <Modal open={modalOpen} close={() => setModalOpen(false)}>
-        <p>Here</p>
+      <Modal open={modalOpen} close={() => setModalOpen(false)} title="Request an appointment">
+        <ScheduleForm 
+          dateSelected={dateSelected!}
+          timeSelected={timeSelected}
+          handleCancel={() => setModalOpen(false)}
+        />
       </Modal>
     </div>
   )
