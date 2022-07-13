@@ -1,48 +1,57 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from 'next'
+import { BookingType } from '../../types/types';
 
-type BookingType = {
-  name: string;
-  date: string;
-  time: string;
-  email: string;
-  notes: string;
+type RespType = {
+  bookings: BookingType[],
+  timesAvailable: string[]
 }
 
 const Bookings = [
   {
     name: "John Doe",
-    date: '07/22/22',
+    date: '7/22/2022',
     time: '15',
     email: 'testing@tester.com',
     notes: 'Testing account'
   },
   {
     name: "John Doe",
-    date: '07/22/22',
+    date: '7/22/2022',
     time: '10',
     email: 'testing@tester.com',
     notes: 'Testing account'
   },
   {
     name: "John Doe",
-    date: '07/22/22',
+    date: '7/22/2022',
     time: '18',
     email: 'testing@tester.com',
     notes: 'Testing account'
   },
   {
     name: "John Doe",
-    date: '07/21/22',
-    time: '13',
+    date: '7/21/2022',
+    time: '15',
     email: 'testing@tester.com',
     notes: 'Testing account'
   }
 ]
 
+const timesAvailable = [
+  '10',
+  '15',
+  '18'
+]
+
+const data = {
+  bookings: Bookings,
+  timesAvailable
+}
+
 export default function handler(
   req: NextApiRequest,
-  res: NextApiResponse<BookingType[]>
+  res: NextApiResponse<RespType>
 ) {
-  res.status(200).json(Bookings)
+  res.status(200).json(data)
 }

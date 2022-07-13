@@ -10,6 +10,7 @@ import { Button } from '../components/styles/Button';
 import { Modal } from '../components/styles/Modal';
 import { ScheduleForm } from '../components/ScheduleForm/ScheduleForm';
 import { timeConvert } from '../components/Helpers/functions';
+import { BookingType } from '../types/types';
 
 const Main = styled.main`
   min-height: 100vh;
@@ -84,33 +85,6 @@ const AppointmentSelector = styled.div`
   }
 `;
 
-const booked = [
-  'July 13, 22 18:00:00 GMT-0500',
-  'July 13, 22 15:00:00 GMT-0500',
-  'July 13, 22 10:00:00 GMT-0500',
-  'July 10, 22 18:00:00 GMT-0500',
-  'July 20, 22 18:00:00 GMT-0500',
-  'July 8, 22 15:00:00 GMT-0500'
-]
-
-const timesAvailable = [
-  '10',
-  '15',
-  '18'
-]
-
-function bookedTransformed(dates: String[]) {
-  const months:any = [];
-  for (let i = 0; i < dates.length; i++) {
-    // const tempDate = new Date(dates[i]);
-    // if (months.includes(tempDate.getMonth())) {
-    //   // do stuff...
-    // } else {
-    //   months.push(tempDate.getMonth());
-    // }
-  }
-}
-
 export const getServerSideProps = async () => {
   const apiUrl = 'http://localhost:3000/api/bookings';
   const res = await fetch(apiUrl);
@@ -118,32 +92,54 @@ export const getServerSideProps = async () => {
 
   return {
     props: {
-      bookings: data
+      bookings: data.bookings as BookingType,
+      timesAvailable: data.timesAvailable
     }
   }
 }
 
-const Home: NextPage = ({ bookings }: any) => {
+interface HomeProps {
+  bookings: BookingType[]
+  timesAvailable: string[]
+}
+
+const Home: NextPage<HomeProps> = ({ bookings, timesAvailable }) => {
   const [dateSelected, setDateSelected] = useState<Date | null>(null);
   const [timeSelected, setTimeSelected] = useState<Number | null>(null);
   const [modalOpen, setModalOpen] = useState<boolean>(false);
 
-  const timesBooked: any[] = useMemo(() => {
-    let someBooked = [];
-    for (let i = 0; i < booked.length; i++) {
-      const tempDate = new Date(booked[i]);
-      if (tempDate.toDateString() === dateSelected?.toDateString()) {
-        someBooked.push(tempDate.getHours());
+  const timesBooked: string[] = useMemo(() => {
+    if (!dateSelected) return [];
+    let timesArr = [];
+    const sDateF = `${(dateSelected.getMonth() + 1)}/${dateSelected.getDate()}/${dateSelected.getFullYear()}`;
+    for (let i = 0; i < bookings.length; i++) {
+      if (bookings[i].date === sDateF) {
+        timesArr.push(bookings[i].time);
       }
     }
-    return someBooked
+    return timesArr;
   }, [dateSelected]);
+
+  const bookedDays = useMemo(() => {
+    let someBooked: any = {};
+    for (let i = 0; i < bookings.length; i++) {
+      if ( Object.keys(someBooked).includes(bookings[i].date) ) {
+        someBooked[bookings[i].date].push(bookings[i].time)
+      } else {
+        someBooked[bookings[i].date] = [bookings[i].time]
+      }
+    }
+
+    return Object.keys(someBooked).filter((date: string) => {
+      if (someBooked[date].length > 2) return date;
+    })
+  }, [bookings]);
 
   function handleTimeSelect(time: number) {
     setTimeSelected(time);
     setModalOpen(true);
   }
- 
+
   return (
     <div>
       <GlobalStyles />
@@ -165,19 +161,19 @@ const Home: NextPage = ({ bookings }: any) => {
         <CalBox open={!!dateSelected}>
           <Schedule 
             handleDateSelect={setDateSelected} 
-            excludeDates={booked}
+            excludeDates={bookedDays}
           />
 
           {dateSelected && (
             <AppointmentSelector>
               <h4>{dateSelected.toDateString()}</h4>
               <ul>
-                {timesAvailable.map((time) => {
+                {timesAvailable.map((time: string) => {
                   return (
                     <li key={time}>
                       <Button 
                         fullWidth 
-                        disabled={timesBooked.includes(Number(time))}
+                        disabled={timesBooked.includes(time)}
                         onClick={() => handleTimeSelect(Number(time))}
                       >
                         Schedule for {timeConvert(time)}

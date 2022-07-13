@@ -8,19 +8,16 @@ const CalendarWrap = styled.div`
   max-width: 300px;
 `;
 
-function setDisabledDates(date: Date, view: String, excludeDates: String[]) {
-  // let bookedDates = []
-  // for (let i = 0; i < excludeDates.length; i++) {
-  //   const tempDate = new Date(excludeDates[i]);
-  //   if (tempDate.toDateString() === date.toDateString()) {
-  //     // someBooked.push(tempDate.getHours());
-  //     debugger;
-  //   }
-  // }
+function setDisabledDates(date: Date, view: string, excludeDates: string[]) {
   const today = new Date();
   if (view === 'month') {
     if (date < today) {
-      return true;
+      return true; // don't show dates today or before
+    }
+
+    const shufDate = `${(date.getMonth() + 1)}/${date.getDate()}/${date.getFullYear()}`;
+    if (excludeDates.includes(shufDate)) {
+      return true; // remove dates where all 3 times are booked
     }
     return date.getDay() === 0;
   }
@@ -29,7 +26,7 @@ function setDisabledDates(date: Date, view: String, excludeDates: String[]) {
 
 interface ScheduleProps {
   handleDateSelect: (d: Date) => void;
-  excludeDates: String[];
+  excludeDates: string[];
 }
 
 export function Schedule({ handleDateSelect, excludeDates }: ScheduleProps) {
