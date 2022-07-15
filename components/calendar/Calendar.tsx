@@ -41,7 +41,6 @@ export function Schedule({ handleDateSelect, excludeDates }: ScheduleProps) {
     <CalendarWrap>
       <Calendar
         onChange={handleClick}
-        onClickDay={(d) => console.log('here too', d)}
         value={value}
         tileDisabled={({date, view}) => setDisabledDates(date, view, excludeDates)}
       />

@@ -1,57 +1,35 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { BookingType } from '../../types/types';
+// import { BookingType } from '../../types/types';
+import { PrismaClient } from '@prisma/client';
 
-type RespType = {
-  bookings: BookingType[],
-  timesAvailable: string[]
-}
+// type RespType = {
+//   bookings: BookingType[],
+//   timesAvailable: string[]
+// }
 
-const Bookings = [
-  {
-    name: "John Doe",
-    date: '7/22/2022',
-    time: '15',
-    email: 'testing@tester.com',
-    notes: 'Testing account'
-  },
-  {
-    name: "John Doe",
-    date: '7/22/2022',
-    time: '10',
-    email: 'testing@tester.com',
-    notes: 'Testing account'
-  },
-  {
-    name: "John Doe",
-    date: '7/22/2022',
-    time: '18',
-    email: 'testing@tester.com',
-    notes: 'Testing account'
-  },
-  {
-    name: "John Doe",
-    date: '7/21/2022',
-    time: '15',
-    email: 'testing@tester.com',
-    notes: 'Testing account'
-  }
-]
-
-const timesAvailable = [
-  '10',
-  '15',
-  '18'
-]
-
-const data = {
-  bookings: Bookings,
-  timesAvailable
-}
-
-export default function handler(
+export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<RespType>
+  res: NextApiResponse<any>
 ) {
+  const {
+    name,
+    date,
+    time,
+    email,
+    notes
+  } = req.body;
+
+  const prisma = new PrismaClient();
+  const data = await prisma.dSPBookings.create({
+    data: {
+      name: name,
+      date: date,
+      time: time.toString(),
+      email: email,
+      notes: notes
+    }
+  })
+
   res.status(200).json(data)
 }

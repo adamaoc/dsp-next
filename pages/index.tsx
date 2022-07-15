@@ -1,5 +1,6 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
+import { PrismaClient } from '@prisma/client';
 import { GlobalStyles } from '../components/styles/GlobalStyles';
 import { keyframes } from '@emotion/react';
 import styled from '@emotion/styled';
@@ -11,6 +12,7 @@ import { Modal } from '../components/styles/Modal';
 import { ScheduleForm } from '../components/ScheduleForm/ScheduleForm';
 import { timeConvert } from '../components/Helpers/functions';
 import { BookingType } from '../types/types';
+import { TIMESAVAILABLE } from '../constants/BookingConstants';
 
 const Main = styled.main`
   min-height: 100vh;
@@ -86,14 +88,13 @@ const AppointmentSelector = styled.div`
 `;
 
 export const getServerSideProps = async () => {
-  const apiUrl = 'http://localhost:3000/api/bookings';
-  const res = await fetch(apiUrl);
-  const data = await res.json();
+  const prisma = new PrismaClient();
+  const bookings = await prisma.dSPBookings.findMany({});
 
   return {
     props: {
-      bookings: data.bookings as BookingType,
-      timesAvailable: data.timesAvailable
+      bookings: JSON.parse(JSON.stringify(bookings)),
+      timesAvailable: TIMESAVAILABLE
     }
   }
 }
@@ -111,9 +112,9 @@ const Home: NextPage<HomeProps> = ({ bookings, timesAvailable }) => {
   const timesBooked: string[] = useMemo(() => {
     if (!dateSelected) return [];
     let timesArr = [];
-    const sDateF = `${(dateSelected.getMonth() + 1)}/${dateSelected.getDate()}/${dateSelected.getFullYear()}`;
     for (let i = 0; i < bookings.length; i++) {
-      if (bookings[i].date === sDateF) {
+      const bookDate = new Date(bookings[i].date);
+      if (bookDate.toDateString() === dateSelected.toDateString()) {
         timesArr.push(bookings[i].time);
       }
     }
@@ -123,13 +124,13 @@ const Home: NextPage<HomeProps> = ({ bookings, timesAvailable }) => {
   const bookedDays = useMemo(() => {
     let someBooked: any = {};
     for (let i = 0; i < bookings.length; i++) {
-      if ( Object.keys(someBooked).includes(bookings[i].date) ) {
-        someBooked[bookings[i].date].push(bookings[i].time)
+      if ( Object.keys(someBooked).includes(bookings[i].date.toString()) ) {
+        someBooked[bookings[i].date.toString()].push(bookings[i].time)
       } else {
-        someBooked[bookings[i].date] = [bookings[i].time]
+        someBooked[bookings[i].date.toString()] = [bookings[i].time]
       }
     }
-
+console.log({someBooked})
     return Object.keys(someBooked).filter((date: string) => {
       if (someBooked[date].length > 2) return date;
     })
@@ -139,7 +140,7 @@ const Home: NextPage<HomeProps> = ({ bookings, timesAvailable }) => {
     setTimeSelected(time);
     setModalOpen(true);
   }
-
+console.log({bookedDays})
   return (
     <div>
       <GlobalStyles />
