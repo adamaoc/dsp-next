@@ -44,6 +44,23 @@ export const ScheduleForm = ({
     handleCancel()
   }
 
+  async function requestApp() {
+    const resp = fetch('/api/bookings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: name,
+        email: email,
+        date: dateSelected,
+        time: timeSelected,
+        notes: 'Testing'
+      })
+    })
+
+    await resp;
+    debugger;
+  }
+
   return (
     <FormWrap>
       <p>Please confirm that you would like to request the following appointment:</p>
@@ -56,11 +73,11 @@ export const ScheduleForm = ({
       <p>Please enter your name, your email address and choose a password to get started.</p>
       <div>
         <label>Name</label>
-        <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
+        <input type="text" defaultValue={name} onChange={(e) => setName(e.target.value)} />
       </div>
       <div>
         <label>email</label>
-        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <input type="email" defaultValue={email} onChange={(e) => setEmail(e.target.value)} />
       </div>
       <div>
         <h4>Payment Options:</h4>
@@ -72,7 +89,7 @@ export const ScheduleForm = ({
         </select>
       </div>
       <div>
-        <Button disabled={errors}>Request Appointment</Button>
+        <Button disabled={errors} onClick={() => requestApp()}>Request Appointment</Button>
         <Button secondary onClick={cancelForm}>Cancel</Button>
       </div>
     </FormWrap>
