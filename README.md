@@ -34,4 +34,12 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
 
 
-// add to DO build command `yarn prisma:deploy && yarn build`
+## TO DO
+- remove ability to go back in time on react calendar
+- pull only dates in the future from api
+- clean up schedule form styles
+- handle schedule form submit better / return to main page with conformation 
+- ability to take payment
+- update calendar styling 
+- ability to book multipul days?
+- add to Digital Ocean build command `yarn prisma:deploy && yarn build`

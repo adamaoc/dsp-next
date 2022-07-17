@@ -14,9 +14,7 @@ function setDisabledDates(date: Date, view: string, excludeDates: string[]) {
     if (date < today) {
       return true; // don't show dates today or before
     }
-
-    const shufDate = `${(date.getMonth() + 1)}/${date.getDate()}/${date.getFullYear()}`;
-    if (excludeDates.includes(shufDate)) {
+    if (excludeDates.includes(date.toDateString())) {
       return true; // remove dates where all 3 times are booked
     }
     return date.getDay() === 0;

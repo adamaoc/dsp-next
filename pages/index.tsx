@@ -78,6 +78,7 @@ const AppointmentSelector = styled.div`
   }
   li {
     list-style: none;
+    margin-bottom: 1rem;
   }
   .clear {
     align-self: flex-end;
@@ -86,6 +87,49 @@ const AppointmentSelector = styled.div`
     animation: ${fadeIn} 1s ease-in;
   }
 `;
+
+const ClearBtn = styled.button`
+  background: #d3b3b3;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  color: white;
+  cursor: pointer;
+  &:hover {
+    background: #b48a8a;
+  }
+`;
+
+function buildBookedDaysArr(bookings: BookingType[]) {
+  // find all dates that have all 3 times booked
+  // return array of dates booked as string
+  let someBooked: any = {};
+  for (let i = 0; i < bookings.length; i++) {
+    const booked = bookings[i];
+    const bookedDate = new Date(booked.date);
+    const bookedDateString = bookedDate.toDateString();
+    if ( Object.keys(someBooked).includes(bookedDateString) ) {
+      someBooked[bookedDateString].push(booked.time)
+    } else {
+      someBooked[bookedDateString] = [booked.time]
+    }
+  }
+  return Object.keys(someBooked).filter((date: string) => {
+    if (someBooked[date].length > 2) return date;
+  })
+}
+
+function buildTimesBookedArr(bookings: BookingType[], dateSelected: Date) {
+  if (!dateSelected) return [];
+  let timesArr = [];
+  for (let i = 0; i < bookings.length; i++) {
+    const bookDate = new Date(bookings[i].date);
+    if (bookDate.toDateString() === dateSelected.toDateString()) {
+      timesArr.push(bookings[i].time);
+    }
+  }
+  return timesArr;
+}
 
 export const getServerSideProps = async () => {
   const prisma = new PrismaClient();
@@ -110,37 +154,18 @@ const Home: NextPage<HomeProps> = ({ bookings, timesAvailable }) => {
   const [modalOpen, setModalOpen] = useState<boolean>(false);
 
   const timesBooked: string[] = useMemo(() => {
-    if (!dateSelected) return [];
-    let timesArr = [];
-    for (let i = 0; i < bookings.length; i++) {
-      const bookDate = new Date(bookings[i].date);
-      if (bookDate.toDateString() === dateSelected.toDateString()) {
-        timesArr.push(bookings[i].time);
-      }
-    }
-    return timesArr;
+    return buildTimesBookedArr(bookings, dateSelected);
   }, [dateSelected]);
 
   const bookedDays = useMemo(() => {
-    let someBooked: any = {};
-    for (let i = 0; i < bookings.length; i++) {
-      if ( Object.keys(someBooked).includes(bookings[i].date.toString()) ) {
-        someBooked[bookings[i].date.toString()].push(bookings[i].time)
-      } else {
-        someBooked[bookings[i].date.toString()] = [bookings[i].time]
-      }
-    }
-console.log({someBooked})
-    return Object.keys(someBooked).filter((date: string) => {
-      if (someBooked[date].length > 2) return date;
-    })
+    return buildBookedDaysArr(bookings)
   }, [bookings]);
 
   function handleTimeSelect(time: number) {
     setTimeSelected(time);
     setModalOpen(true);
   }
-console.log({bookedDays})
+
   return (
     <div>
       <GlobalStyles />
@@ -183,7 +208,7 @@ console.log({bookedDays})
                   )
                 })}
               </ul>
-              <button className="clear" onClick={() => setDateSelected(null)}>clear</button>
+              <ClearBtn className="clear" onClick={() => setDateSelected(null)}>clear</ClearBtn>
             </AppointmentSelector>
           )}
         </CalBox>
