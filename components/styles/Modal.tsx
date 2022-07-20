@@ -20,13 +20,23 @@ const Overlay = styled.div<ModalProps>`
 `;
 
 const ModalBody = styled.div`
-  width: 340px;
-  max-height: 80vh;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-height: 100vh;
   background: #fff;
+  @media (min-width: 600px) {
+    position: relative;
+    max-height: 80vh;
+    width: 340px;
+  }
 `;
 
 const ModalTitle = styled.h3`
-  background: #494f59;
+  background: #2e2f2f;
   color: #fff;
   font-size: 1.25rem;
   font-weight: 400;
@@ -53,8 +63,8 @@ export const Modal = ({ title, children, open, close }: any) => {
   return (
     <Overlay open={open}>
       <OutsideClickHandler onOutsideClick={handleDismiss}>
-        <ModalTitle>{title} <button onClick={handleDismiss}>X</button></ModalTitle>
         <ModalBody>
+          <ModalTitle>{title} <button onClick={handleDismiss}>X</button></ModalTitle>
           {children}
         </ModalBody>
       </OutsideClickHandler>

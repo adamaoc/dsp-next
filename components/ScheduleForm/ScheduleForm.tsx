@@ -4,15 +4,80 @@ import { timeConvert } from '../Helpers/functions';
 import { Button } from '../styles/Button';
 
 const FormWrap = styled.div`
-  background: #eee;
+  background: #fff;
   padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 6.5rem);
+  overflow-y: auto;
+  section {
+    height: auto;
+  }
+  p {
+    margin: 0.25rem 0 1rem 0;
+  }
+  div {
+    margin: 1rem 0;
+  }
+  label {
+    font-size: 0.75rem;
+    margin-bottom: 0.25rem;
+    display: block;
+  }
+  input[type="text"],
+  input[type="email"] {
+    border: none;
+    width: 100%;
+    border-bottom: 1px solid #c4c4c4;
+    height: 39px;
+    background: #efefef;
+  }
+  select {
+    width: 100%;
+    height: 2rem;
+  }
+  h4 {
+    margin-bottom: 1rem;
+  }
+  @media (min-width: 600px) {
+    height: calc(80vh - 5.5rem);
+    section {
+      height: auto;
+    }
+  }
+`;
+
+const Footer = styled.footer`
+  margin-top: auto;
+  display: flex;
+  justify-content: space-around;
+  padding: 0.5rem 0;
 `;
 
 const Date = styled.div`
-  background: white;
+  background: #d2fdff;
   padding: 1rem;
   margin: 1rem auto;
   box-shadow: 1px 1px 3px #e1e1e1;
+  text-align: center;
+  font-weight: bold;
+`;
+
+const LoadingCover = styled.div`
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  opacity: 0.7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  &:after {
+    content: "Requesting...";
+    color: #444;
+  }
 `;
 
 interface ScheduleFormProps {
@@ -29,6 +94,7 @@ export const ScheduleForm = ({
   const [name, setName] = useState<string | undefined>();
   const [email, setEmail] = useState<string | undefined>();
   const [payment, setPayment] = useState<string | undefined>();
+  const [loading, setLoading] = useState<boolean>(false);
   
   const errors = useMemo(() => {
     if (email && name && payment) {
@@ -45,6 +111,7 @@ export const ScheduleForm = ({
   }
 
   async function requestApp() {
+    setLoading(true);
     const resp = fetch('/api/bookings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -57,41 +124,56 @@ export const ScheduleForm = ({
       })
     })
 
-    await resp;
-    debugger;
+    const booked = await resp.then();
+    if (booked.status === 200) {
+      // close modal and confirm booked
+      setLoading(false);
+      cancelForm();
+      // add appointment to bookings?
+      const another = await booked.json();
+      console.table(another)
+    } else {
+      // return error 
+      console.error({booked});
+    }
   }
 
   return (
-    <FormWrap>
-      <p>Please confirm that you would like to request the following appointment:</p>
-      <Date>
-        <>
-          {dateSelected?.toDateString()} at {timeConvert(String(timeSelected))}
-        </>
-      </Date>
-      <h4>Registration:</h4>
-      <p>Please enter your name, your email address and choose a password to get started.</p>
-      <div>
-        <label>Name</label>
-        <input type="text" defaultValue={name} onChange={(e) => setName(e.target.value)} />
-      </div>
-      <div>
-        <label>email</label>
-        <input type="email" defaultValue={email} onChange={(e) => setEmail(e.target.value)} />
-      </div>
-      <div>
-        <h4>Payment Options:</h4>
-        <select value={payment} onChange={(e) => setPayment(e.target.value)}>
-          <option value={undefined}>Select Option</option>
-          <option value="cash">Pay Cash - On Site</option>
-          <option value="online">Online Downpayment</option>
-          <option value="paypal">PayPal Downpayment</option>
-        </select>
-      </div>
-      <div>
+    <>
+      <FormWrap>
+        <section>
+          <p>Please confirm that you would like to request the following appointment:</p>
+          <Date>
+            <>
+              {dateSelected?.toDateString()} at {timeConvert(String(timeSelected))}
+            </>
+          </Date>
+          <h4>Registration:</h4>
+          <p>Please enter your name, your email address and choose a password to get started.</p>
+          <div>
+            <label>Name</label>
+            <input type="text" defaultValue={name} placeholder="Enter Name" onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div>
+            <label>email</label>
+            <input type="email" defaultValue={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+          <div>
+            <h4>Payment Options:</h4>
+            <select value={payment} onChange={(e) => setPayment(e.target.value)}>
+              <option value={undefined}>Select Option</option>
+              <option value="cash">Pay Cash - On Site</option>
+              <option value="online">Online Downpayment</option>
+              <option value="paypal">PayPal Downpayment</option>
+            </select>
+          </div>
+        </section>
+      </FormWrap>
+      <Footer>
         <Button disabled={errors} onClick={() => requestApp()}>Request Appointment</Button>
         <Button secondary onClick={cancelForm}>Cancel</Button>
-      </div>
-    </FormWrap>
+      </Footer>
+      {loading && <LoadingCover />}
+    </>
   )
 }

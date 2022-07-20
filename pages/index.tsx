@@ -36,12 +36,17 @@ interface CallBox {
   open: boolean;
 }
 const CalBox = styled.div<CallBox>`
-  width: ${({open}) => open ? '600px' : '300px'};
+  width: 300px;
   background: white;
   border-radius: 5px;
   margin: 2rem 0;
   display: flex;
+  flex-direction: column;
   transition: width ease-in-out 200ms;
+  @media (min-width: 600px) {
+    flex-direction: row;
+    width: ${({open}) => open ? '600px' : '300px'};
+  }
 `;
 
 const Footer = styled.footer`
@@ -134,6 +139,7 @@ function buildTimesBookedArr(bookings: BookingType[], dateSelected: Date) {
 export const getServerSideProps = async () => {
   const prisma = new PrismaClient();
   const bookings = await prisma.dSPBookings.findMany({});
+  // await prisma.disconnect();
 
   return {
     props: {
@@ -154,8 +160,11 @@ const Home: NextPage<HomeProps> = ({ bookings, timesAvailable }) => {
   const [modalOpen, setModalOpen] = useState<boolean>(false);
 
   const timesBooked: string[] = useMemo(() => {
-    return buildTimesBookedArr(bookings, dateSelected);
-  }, [dateSelected]);
+    if (dateSelected) {
+      return buildTimesBookedArr(bookings, dateSelected);
+    }
+    return [];
+  }, [dateSelected, bookings]);
 
   const bookedDays = useMemo(() => {
     return buildBookedDaysArr(bookings)
@@ -221,7 +230,10 @@ const Home: NextPage<HomeProps> = ({ bookings, timesAvailable }) => {
         <ScheduleForm 
           dateSelected={dateSelected!}
           timeSelected={timeSelected}
-          handleCancel={() => setModalOpen(false)}
+          handleCancel={() => {
+            setModalOpen(false)
+            setTimeSelected(null)
+          }}
         />
       </Modal>
     </div>
