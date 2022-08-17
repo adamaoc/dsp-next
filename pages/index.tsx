@@ -1,18 +1,20 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import { PrismaClient } from '@prisma/client';
-import { GlobalStyles } from '../components/styles/GlobalStyles';
+import Image from 'next/image';
+import { useMemo, useState } from 'react';
 import { keyframes } from '@emotion/react';
 import styled from '@emotion/styled';
+
+import { GlobalStyles } from '../components/styles/GlobalStyles';
 import { Schedule } from '../components/calendar/Calendar';
-import { useMemo, useState } from 'react';
-import Image from 'next/image';
 import { Button } from '../components/styles/Button';
 import { Modal } from '../components/styles/Modal';
 import { ScheduleForm } from '../components/ScheduleForm/ScheduleForm';
 import { timeConvert } from '../components/Helpers/functions';
-import { BookingType } from '../types/types';
 import { TIMESAVAILABLE } from '../constants/BookingConstants';
+
+import { UserProvider } from '../store/index';
+import { IBookingType } from '../types/types';
 
 const Main = styled.main`
   min-height: 100vh;
@@ -45,7 +47,7 @@ const CalBox = styled.div<CallBox>`
   transition: width ease-in-out 200ms;
   @media (min-width: 600px) {
     flex-direction: row;
-    width: ${({open}) => open ? '600px' : '300px'};
+    width: ${({ open }) => open ? '600px' : '300px'};
   }
 `;
 
@@ -105,7 +107,7 @@ const ClearBtn = styled.button`
   }
 `;
 
-function buildBookedDaysArr(bookings: BookingType[]) {
+function buildBookedDaysArr(bookings: IBookingType[]) {
   // find all dates that have all 3 times booked
   // return array of dates booked as string
   let someBooked: any = {};
@@ -113,7 +115,7 @@ function buildBookedDaysArr(bookings: BookingType[]) {
     const booked = bookings[i];
     const bookedDate = new Date(booked.date);
     const bookedDateString = bookedDate.toDateString();
-    if ( Object.keys(someBooked).includes(bookedDateString) ) {
+    if (Object.keys(someBooked).includes(bookedDateString)) {
       someBooked[bookedDateString].push(booked.time)
     } else {
       someBooked[bookedDateString] = [booked.time]
@@ -124,7 +126,7 @@ function buildBookedDaysArr(bookings: BookingType[]) {
   })
 }
 
-function buildTimesBookedArr(bookings: BookingType[], dateSelected: Date) {
+function buildTimesBookedArr(bookings: IBookingType[], dateSelected: Date) {
   if (!dateSelected) return [];
   let timesArr = [];
   for (let i = 0; i < bookings.length; i++) {
@@ -137,10 +139,11 @@ function buildTimesBookedArr(bookings: BookingType[], dateSelected: Date) {
 }
 
 export const getServerSideProps = async () => {
-  const prisma = new PrismaClient();
-  const bookings = await prisma.dSPBookings.findMany({});
-  // await prisma.disconnect();
-
+  const results = await fetch('http://localhost:3000/api/bookings', {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' }
+  })
+  const bookings = await results.json();
   return {
     props: {
       bookings: JSON.parse(JSON.stringify(bookings)),
@@ -150,7 +153,7 @@ export const getServerSideProps = async () => {
 }
 
 interface HomeProps {
-  bookings: BookingType[]
+  bookings: IBookingType[]
   timesAvailable: string[]
 }
 
@@ -178,65 +181,69 @@ const Home: NextPage<HomeProps> = ({ bookings, timesAvailable }) => {
   return (
     <div>
       <GlobalStyles />
-      <Head>
-        <title>DSP App</title>
-        <meta name="description" content="This is the DSP App" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+      <UserProvider>
+        <Head>
+          <title>DSP App</title>
+          <meta name="description" content="This is the DSP App" />
+          <link rel="icon" href="/favicon.ico" />
+        </Head>
 
-      <Main>
-        <MainTitle>
-          <Image 
-            src="/ds-photography-logo-black.png" 
-            alt="DS Photography Logo" 
-            width={80}
-            height={80}
+        <Main>
+          <MainTitle>
+            <Image
+              src="/ds-photography-logo-black.png"
+              alt="DS Photography Logo"
+              width={80}
+              height={80}
+            />
+          </MainTitle>
+
+          <CalBox open={!!dateSelected}>
+            <Schedule
+              handleDateSelect={setDateSelected}
+              excludeDates={bookedDays}
+            />
+
+            {dateSelected && (
+              <AppointmentSelector>
+                <h4>{dateSelected.toDateString()}</h4>
+                <ul>
+                  {timesAvailable.map((time: string) => {
+                    return (
+                      <li key={time}>
+                        <Button
+                          fullWidth
+                          disabled={timesBooked.includes(time)}
+                          onClick={() => handleTimeSelect(Number(time))}
+                        >
+                          Schedule for {timeConvert(time)}
+                        </Button>
+                      </li>
+                    )
+                  })}
+                </ul>
+                <ClearBtn className="clear" onClick={() => setDateSelected(null)}>clear</ClearBtn>
+              </AppointmentSelector>
+            )}
+          </CalBox>
+
+          <Footer>
+            <p>developed with love</p>
+          </Footer>
+        </Main>
+
+        <Modal open={modalOpen} close={() => setModalOpen(false)} title="Request an appointment">
+          <ScheduleForm
+            dateSelected={dateSelected!}
+            timeSelected={timeSelected}
+            handleCancel={() => {
+              setModalOpen(false)
+              setTimeSelected(null)
+            }}
           />
-        </MainTitle>
-        <CalBox open={!!dateSelected}>
-          <Schedule 
-            handleDateSelect={setDateSelected} 
-            excludeDates={bookedDays}
-          />
-
-          {dateSelected && (
-            <AppointmentSelector>
-              <h4>{dateSelected.toDateString()}</h4>
-              <ul>
-                {timesAvailable.map((time: string) => {
-                  return (
-                    <li key={time}>
-                      <Button 
-                        fullWidth 
-                        disabled={timesBooked.includes(time)}
-                        onClick={() => handleTimeSelect(Number(time))}
-                      >
-                        Schedule for {timeConvert(time)}
-                      </Button>
-                    </li>
-                  )
-                })}
-              </ul>
-              <ClearBtn className="clear" onClick={() => setDateSelected(null)}>clear</ClearBtn>
-            </AppointmentSelector>
-          )}
-        </CalBox>
-        <Footer>
-          <p>developed with love</p>
-        </Footer>
-      </Main>
-
-      <Modal open={modalOpen} close={() => setModalOpen(false)} title="Request an appointment">
-        <ScheduleForm 
-          dateSelected={dateSelected!}
-          timeSelected={timeSelected}
-          handleCancel={() => {
-            setModalOpen(false)
-            setTimeSelected(null)
-          }}
-        />
-      </Modal>
-    </div>
+        </Modal>
+      </UserProvider>
+    </div >
   )
 }
 

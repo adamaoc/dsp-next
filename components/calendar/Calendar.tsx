@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import styled from '@emotion/styled';
+import { UserContext } from '../../store';
 
 const CalendarWrap = styled.div`
   width: 300px;
@@ -28,21 +29,22 @@ interface ScheduleProps {
 }
 
 export function Schedule({ handleDateSelect, excludeDates }: ScheduleProps) {
-	const [value, onChange] = useState(new Date());
+  const [value, onChange] = useState(new Date());
+  const userDetails = React.useContext(UserContext);
 
   const handleClick = (date: any) => {
     onChange(date)
     handleDateSelect(date)
   }
 
-	return (
+  return (
     <CalendarWrap>
       <Calendar
         onChange={handleClick}
         value={value}
-        tileDisabled={({date, view}) => setDisabledDates(date, view, excludeDates)}
+        tileDisabled={({ date, view }) => setDisabledDates(date, view, excludeDates)}
       />
     </CalendarWrap>
-	);
+  );
 }
 

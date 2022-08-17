@@ -40,7 +40,8 @@ const FormWrap = styled.div`
     margin-bottom: 1rem;
   }
   @media (min-width: 600px) {
-    height: calc(80vh - 5.5rem);
+    height: auto;
+    max-height: calc(80vh - 5.5rem);
     section {
       height: auto;
     }
@@ -95,7 +96,7 @@ export const ScheduleForm = ({
   const [email, setEmail] = useState<string | undefined>();
   const [payment, setPayment] = useState<string | undefined>();
   const [loading, setLoading] = useState<boolean>(false);
-  
+
   const errors = useMemo(() => {
     if (email && name && payment) {
       return false;
@@ -112,29 +113,30 @@ export const ScheduleForm = ({
 
   async function requestApp() {
     setLoading(true);
-    const resp = fetch('/api/bookings', {
+    const resp = await fetch('/api/bookings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: name,
         email: email,
-        date: dateSelected,
-        time: timeSelected,
-        notes: 'Testing'
+        bookedDate: dateSelected,
+        bookedTime: timeSelected?.toString(),
+        paymentType: payment,
+        paymentAmount: 0
       })
     })
 
-    const booked = await resp.then();
-    if (booked.status === 200) {
+    const booked = await resp.json();
+    // debugger;
+    console.log({ booked })
+    if (resp.status === 200) {
       // close modal and confirm booked
       setLoading(false);
       cancelForm();
-      // add appointment to bookings?
-      const another = await booked.json();
-      console.table(another)
+      // this isn't closing the modal and we're not refetching booked //
     } else {
-      // return error 
-      console.error({booked});
+      // return error // havent seen this work.. need to test
+      console.error({ booked });
     }
   }
 

@@ -10,11 +10,38 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model DSPUser {
+  id              String            @id @default(uuid())
+  name            String
+  email           String            @unique
+  notes           String?
+  bookings        DSPBookings[]
+  DSPTransactions DSPTransactions[]
+
+  @@index([email])
+}
+
 model DSPBookings {
-  id    Int       @id @default(autoincrement())
-  name  String
-  date  DateTime
-  time  String
-  email String
-  notes String
+  id           String            @id @default(uuid())
+  user         DSPUser           @relation(fields: [userId], references: [id])
+  userId       String
+  date         DateTime
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  time         String
+  total        Int
+  status       String
+  notes        String?
+  transactions DSPTransactions[]
+}
+
+model DSPTransactions {
+  id        String       @id @default(uuid())
+  datePaid  DateTime
+  amount    Int
+  method    String
+  user      DSPUser      @relation(fields: [userId], references: [id])
+  userId    String
+  booking   DSPBookings? @relation(fields: [bookingId], references: [id])
+  bookingId String?
 }
